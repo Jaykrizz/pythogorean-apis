@@ -32,7 +32,7 @@ public class User {
         createdAt = LocalDateTime.now();
     }
 
-    // Getters and setters
+    
 
     public Long getId() {
         return id;

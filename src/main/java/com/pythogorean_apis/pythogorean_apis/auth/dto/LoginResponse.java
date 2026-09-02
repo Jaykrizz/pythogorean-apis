@@ -1,14 +1,18 @@
 package com.pythogorean_apis.pythogorean_apis.auth.dto;
 
-public class LoginResponse {
+import com.pythogorean_apis.pythogorean_apis.auth.entity.User;
 
-    private String token;
+public record LoginResponse(
+        String token,
+        String name,
+        String email,
+        String role) {
 
-    public LoginResponse(String token) {
-        this.token = token;
-    }
-
-    public String getToken() {
-        return token;
+    public static LoginResponse of(String token, User user) {
+        return new LoginResponse(
+                token,
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name());
     }
 }

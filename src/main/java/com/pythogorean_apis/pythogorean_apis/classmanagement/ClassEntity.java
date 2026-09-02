@@ -1,5 +1,7 @@
 package com.pythogorean_apis.pythogorean_apis.classmanagement;
 
+import java.time.LocalDateTime;
+
 import com.pythogorean_apis.pythogorean_apis.branchmanagement.BranchEntity;
 import com.pythogorean_apis.pythogorean_apis.teachermanagement.TeacherEntity;
 import jakarta.persistence.*;
@@ -22,6 +24,14 @@ public class ClassEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "teacher_id", nullable = false)
     private TeacherEntity teacher;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist()
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     public Long getId() {
         return id;
