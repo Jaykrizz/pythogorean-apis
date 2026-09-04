@@ -26,6 +26,9 @@ public class StudentEntity {
     @JoinColumn(name = "parent_id")
     private ParentEntity parent;
 
+    @Column(name = "aruco_marker_id", unique = true)
+    private Integer arucoMarkerId;
+
     public Long getId() {
         return id;
     }
@@ -52,5 +55,13 @@ public class StudentEntity {
 
     public void setParent(ParentEntity parent) {
         this.parent = parent;
+    }
+
+    public Integer getArucoMarkerId() {
+        return arucoMarkerId;
+    }
+
+    public void setArucoMarkerId(Integer arucoMarkerId) {
+        this.arucoMarkerId = arucoMarkerId;
     }
 }
