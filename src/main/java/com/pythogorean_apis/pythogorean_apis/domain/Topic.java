@@ -40,6 +40,10 @@ public class Topic {
         return id;
     }
 
+    public Subject getSubject() {
+        return subject;
+    }
+
     public String getName() {
         return name;
     }
