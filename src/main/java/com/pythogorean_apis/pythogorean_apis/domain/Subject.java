@@ -14,16 +14,16 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(
         name = "subject",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"class_room_id", "name"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"branch_id", "name"}))
 public class Subject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "class_room_id", nullable = false)
-    private ClassRoom classRoom;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
 
     @Column(nullable = false, length = 80)
     private String name;
@@ -31,8 +31,8 @@ public class Subject {
     protected Subject() {
     }
 
-    public Subject(ClassRoom classRoom, String name) {
-        this.classRoom = classRoom;
+    public Subject(Branch branch, String name) {
+        this.branch = branch;
         this.name = name;
     }
 
@@ -40,8 +40,8 @@ public class Subject {
         return id;
     }
 
-    public ClassRoom getClassRoom() {
-        return classRoom;
+    public Branch getBranch() {
+        return branch;
     }
 
     public String getName() {

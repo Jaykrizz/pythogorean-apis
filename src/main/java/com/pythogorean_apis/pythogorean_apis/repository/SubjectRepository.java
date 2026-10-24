@@ -9,9 +9,9 @@ import com.pythogorean_apis.pythogorean_apis.domain.Subject;
 
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
-    List<Subject> findByClassRoomIdOrderByNameAsc(Long classRoomId);
+    List<Subject> findByBranch_IdOrderByNameAsc(Long branchId);
 
-    Optional<Subject> findByIdAndClassRoom_Branch_Id(Long id, Long branchId);
+    Optional<Subject> findByIdAndBranch_Id(Long id, Long branchId);
 
-    boolean existsByClassRoomIdAndNameIgnoreCase(Long classRoomId, String name);
+    boolean existsByBranch_IdAndNameIgnoreCase(Long branchId, String name);
 }

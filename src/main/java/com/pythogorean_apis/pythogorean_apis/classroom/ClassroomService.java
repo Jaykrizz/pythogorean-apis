@@ -14,17 +14,17 @@ import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.ClassSummar
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.PersonOption;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.StudentCard;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.SubjectResponse;
-import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.TopicResponse;
 import com.pythogorean_apis.pythogorean_apis.domain.AppUser;
 import com.pythogorean_apis.pythogorean_apis.domain.ClassRoom;
+import com.pythogorean_apis.pythogorean_apis.domain.ClassSubject;
 import com.pythogorean_apis.pythogorean_apis.domain.Enrollment;
 import com.pythogorean_apis.pythogorean_apis.domain.Role;
 import com.pythogorean_apis.pythogorean_apis.domain.Subject;
 import com.pythogorean_apis.pythogorean_apis.repository.AppUserRepository;
 import com.pythogorean_apis.pythogorean_apis.repository.ClassRoomRepository;
+import com.pythogorean_apis.pythogorean_apis.repository.ClassSubjectRepository;
 import com.pythogorean_apis.pythogorean_apis.repository.EnrollmentRepository;
 import com.pythogorean_apis.pythogorean_apis.repository.SubjectRepository;
-import com.pythogorean_apis.pythogorean_apis.repository.TopicRepository;
 import com.pythogorean_apis.pythogorean_apis.security.CurrentUser;
 
 @Service
@@ -33,9 +33,10 @@ public class ClassroomService {
     private final CurrentUser currentUser;
     private final ClassRoomRepository classes;
     private final SubjectRepository subjects;
-    private final TopicRepository topics;
+    private final ClassSubjectRepository classSubjects;
     private final EnrollmentRepository enrollments;
     private final EnrollmentService enrollmentService;
+    private final CurriculumService curriculum;
     private final AppUserRepository users;
     private final RestClient vision;
 
@@ -43,17 +44,19 @@ public class ClassroomService {
             CurrentUser currentUser,
             ClassRoomRepository classes,
             SubjectRepository subjects,
-            TopicRepository topics,
+            ClassSubjectRepository classSubjects,
             EnrollmentRepository enrollments,
             EnrollmentService enrollmentService,
+            CurriculumService curriculum,
             AppUserRepository users,
             RestClient vision) {
         this.currentUser = currentUser;
         this.classes = classes;
         this.subjects = subjects;
-        this.topics = topics;
+        this.classSubjects = classSubjects;
         this.enrollments = enrollments;
         this.enrollmentService = enrollmentService;
+        this.curriculum = curriculum;
         this.users = users;
         this.vision = vision;
     }
@@ -66,7 +69,7 @@ public class ClassroomService {
                         classRoom.getId(),
                         classRoom.getName(),
                         enrollments.findByClassRoomIdOrderByStudent_NameAsc(classRoom.getId()).size(),
-                        subjects.findByClassRoomIdOrderByNameAsc(classRoom.getId()).size()))
+                        classSubjects.findByClassRoomIdOrderBySubject_NameAsc(classRoom.getId()).size()))
                 .toList();
     }
 
@@ -86,13 +89,8 @@ public class ClassroomService {
     @Transactional(readOnly = true)
     public ClassDetailResponse detail(Long classId) {
         ClassRoom classRoom = classForTeacher(classId);
-        List<SubjectResponse> subjectResponses = subjects.findByClassRoomIdOrderByNameAsc(classRoom.getId()).stream()
-                .map(subject -> new SubjectResponse(
-                        subject.getId(),
-                        subject.getName(),
-                        topics.findBySubjectIdOrderByNameAsc(subject.getId()).stream()
-                                .map(topic -> new TopicResponse(topic.getId(), topic.getName()))
-                                .toList()))
+        List<SubjectResponse> subjectResponses = classSubjects.findByClassRoomIdOrderBySubject_NameAsc(classRoom.getId()).stream()
+                .map(link -> curriculum.toSubject(link.getSubject()))
                 .toList();
         List<StudentCard> students = enrollments.findByClassRoomIdOrderByStudent_NameAsc(classRoom.getId()).stream()
                 .map(enrollment -> new StudentCard(
@@ -105,31 +103,26 @@ public class ClassroomService {
     }
 
     @Transactional
-    public SubjectResponse addSubject(Long classId, String name) {
+    public SubjectResponse linkSubject(Long classId, Long subjectId) {
         ClassRoom classRoom = classForTeacher(classId);
-        String trimmed = name.trim();
+        Subject subject = subjects.findByIdAndBranch_Id(subjectId, classRoom.getBranch().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subject not found"));
 
-        if (subjects.existsByClassRoomIdAndNameIgnoreCase(classRoom.getId(), trimmed)) {
+        if (classSubjects.existsByClassRoomIdAndSubjectId(classRoom.getId(), subject.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This class already has that subject");
         }
 
-        Subject created = subjects.save(new Subject(classRoom, trimmed));
-        return new SubjectResponse(created.getId(), created.getName(), List.of());
+        classSubjects.save(new ClassSubject(classRoom, subject));
+        return curriculum.toSubject(subject);
     }
 
-    @Transactional
-    public TopicResponse addTopic(Long subjectId, String name) {
-        AppUser teacher = currentUser.requireTeacher();
-        Subject subject = subjects.findByIdAndClassRoom_Branch_Id(subjectId, teacher.getBranch().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subject not found"));
-        String trimmed = name.trim();
-
-        if (topics.existsBySubjectIdAndNameIgnoreCase(subject.getId(), trimmed)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "This subject already has that topic");
-        }
-
-        var created = topics.save(new com.pythogorean_apis.pythogorean_apis.domain.Topic(subject, trimmed));
-        return new TopicResponse(created.getId(), created.getName());
+    @Transactional(readOnly = true)
+    public List<PersonOption> availableSubjects(Long classId) {
+        ClassRoom classRoom = classForTeacher(classId);
+        return subjects.findByBranch_IdOrderByNameAsc(classRoom.getBranch().getId()).stream()
+                .filter(subject -> !classSubjects.existsByClassRoomIdAndSubjectId(classRoom.getId(), subject.getId()))
+                .map(subject -> new PersonOption(subject.getId(), subject.getName(), ""))
+                .toList();
     }
 
     @Transactional(readOnly = true)

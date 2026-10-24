@@ -28,6 +28,9 @@ public class Topic {
     @Column(nullable = false, length = 80)
     private String name;
 
+    @Column(nullable = false)
+    private boolean shown;
+
     protected Topic() {
     }
 
@@ -46,5 +49,13 @@ public class Topic {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isShown() {
+        return shown;
+    }
+
+    public void setShown(boolean shown) {
+        this.shown = shown;
     }
 }

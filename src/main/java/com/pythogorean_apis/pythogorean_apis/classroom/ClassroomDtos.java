@@ -17,10 +17,24 @@ public final class ClassroomDtos {
     public record EnrollRequest(@NotNull Long studentId) {
     }
 
+    public record LinkSubjectRequest(@NotNull Long subjectId) {
+    }
+
     public record ClassSummary(Long id, String name, int studentCount, int subjectCount) {
     }
 
-    public record TopicResponse(Long id, String name) {
+    public record QuestionResponse(
+            Long id,
+            String prompt,
+            String optionA,
+            String optionB,
+            String optionC,
+            String optionD,
+            String correctLetter,
+            int marks) {
+    }
+
+    public record TopicResponse(Long id, String name, boolean shown, List<QuestionResponse> questions) {
     }
 
     public record SubjectResponse(Long id, String name, List<TopicResponse> topics) {

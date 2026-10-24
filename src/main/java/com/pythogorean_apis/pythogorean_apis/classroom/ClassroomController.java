@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.ClassDetailResponse;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.ClassSummary;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.EnrollRequest;
+import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.LinkSubjectRequest;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.NameRequest;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.PersonOption;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.StudentCard;
 import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.SubjectResponse;
-import com.pythogorean_apis.pythogorean_apis.classroom.ClassroomDtos.TopicResponse;
 
 import jakarta.validation.Valid;
 
@@ -50,13 +50,13 @@ public class ClassroomController {
     }
 
     @PostMapping("/classes/{id}/subjects")
-    public SubjectResponse addSubject(@PathVariable Long id, @Valid @RequestBody NameRequest request) {
-        return classroomService.addSubject(id, request.name());
+    public SubjectResponse linkSubject(@PathVariable Long id, @Valid @RequestBody LinkSubjectRequest request) {
+        return classroomService.linkSubject(id, request.subjectId());
     }
 
-    @PostMapping("/subjects/{id}/topics")
-    public TopicResponse addTopic(@PathVariable Long id, @Valid @RequestBody NameRequest request) {
-        return classroomService.addTopic(id, request.name());
+    @GetMapping("/classes/{id}/available-subjects")
+    public List<PersonOption> availableSubjects(@PathVariable Long id) {
+        return classroomService.availableSubjects(id);
     }
 
     @GetMapping("/classes/{id}/available-students")
